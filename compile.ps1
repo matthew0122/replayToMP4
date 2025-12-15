@@ -1,1 +1,1 @@
-g++ .\tagpro_renderer.cpp -o test.exe -I C:\ffmpeg\ffmpeg-8.0.1-full_build-shared\include -L C:\ffmpeg\ffmpeg-8.0.1-full_build-shared\lib -l :libavutil.dll.a -l ws2_32 -l secur32 -lbcrypt
+g++ .\tagpro_renderer.cpp -o test.exe -I C:\ffmpeg\ffmpeg-8.0.1-full_build-shared\include -L C:\ffmpeg\ffmpeg-8.0.1-full_build-shared\lib -l:libavformat.dll.a -l:libavcodec.dll.a -l:libavutil.dll.a -l:libswscale.dll.a -l ws2_32 -l secur32 -lbcrypt
