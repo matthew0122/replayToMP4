@@ -14,7 +14,7 @@ int main() {
     const char* filename = "output.mp4";
     const int width = 640;
     const int height = 480;
-    const int fps = 30;
+    const int fps = 60;
     const int duration_sec = 5;
 
     avformat_network_init();
@@ -37,13 +37,14 @@ int main() {
     // Create new stream
     AVStream* stream = avformat_new_stream(fmt_ctx, codec);
     stream->id = 0;
+    stream->time_base = {1, fps};  // Set stream time_base
 
     // Allocate codec context
     AVCodecContext* cctx = avcodec_alloc_context3(codec);
     cctx->codec_id = codec->id;
     cctx->width = width;
     cctx->height = height;
-    cctx->time_base = {1, fps};
+    cctx->time_base = {1, fps};  // 1/fps seconds per frame
     cctx->framerate = {fps, 1};
     cctx->gop_size = 12;
     cctx->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -74,15 +75,15 @@ int main() {
     frame->height = height;
     av_frame_get_buffer(frame, 32);
 
-    AVPacket pkt;
-    av_init_packet(&pkt);
+    AVPacket* pkt = av_packet_alloc();  // Use av_packet_alloc instead
 
     for (int i = 0; i < fps * duration_sec; ++i) {
         av_frame_make_writable(frame);
-        frame->pts = i;
+        frame->pts = i;  // This is correct now with time_base = 1/fps
 
-        // Simple color pattern
-        memset(frame->data[0], i * 2, width * height);           // Y
+        // Simple color pattern - cycles through brightness
+        int brightness = (i * 255) / (fps * duration_sec);
+        memset(frame->data[0], brightness, width * height);      // Y
         memset(frame->data[1], 128, width * height / 4);         // U
         memset(frame->data[2], 128, width * height / 4);         // V
 
@@ -91,28 +92,37 @@ int main() {
             return -1;
         }
 
-        while (avcodec_receive_packet(cctx, &pkt) == 0) {
-            av_interleaved_write_frame(fmt_ctx, &pkt);
-            av_packet_unref(&pkt);
+        while (avcodec_receive_packet(cctx, pkt) == 0) {
+            // Rescale packet timestamps from codec time_base to stream time_base
+            av_packet_rescale_ts(pkt, cctx->time_base, stream->time_base);
+            pkt->stream_index = stream->index;
+            
+            if (av_interleaved_write_frame(fmt_ctx, pkt) < 0) {
+                std::cerr << "Error writing frame\n";
+            }
+            av_packet_unref(pkt);
         }
     }
 
     // Flush encoder
     avcodec_send_frame(cctx, nullptr);
-    while (avcodec_receive_packet(cctx, &pkt) == 0) {
-        av_interleaved_write_frame(fmt_ctx, &pkt);
-        av_packet_unref(&pkt);
+    while (avcodec_receive_packet(cctx, pkt) == 0) {
+        av_packet_rescale_ts(pkt, cctx->time_base, stream->time_base);
+        pkt->stream_index = stream->index;
+        av_interleaved_write_frame(fmt_ctx, pkt);
+        av_packet_unref(pkt);
     }
 
     // Write trailer
     av_write_trailer(fmt_ctx);
 
     // Clean up
+    av_packet_free(&pkt);
     av_frame_free(&frame);
     avcodec_free_context(&cctx);
     avio_close(fmt_ctx->pb);
     avformat_free_context(fmt_ctx);
 
-    std::cout << "MP4 written to output.mp4\n";
+    std::cout << "MP4 written to output.mp4 (" << duration_sec << " seconds at " << fps << " fps)\n";
     return 0;
 }
