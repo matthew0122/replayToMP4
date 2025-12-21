@@ -20,10 +20,19 @@ std::vector<std::vector<std::string>> getMap(std::string filename);
 
 int main() {
     const char* filename = "output.mp4";
-    const int width = 640;
-    const int height = 480;
+    // const int width = 640;
+    // const int height = 480;
     const int fps = 60;
     const int duration_sec = 5;
+    const int tile_size = 40;
+    const std::string replayFile = "replay.ndjson";
+
+    std::vector<std::vector<std::string>> map = getMap(replayFile);
+    const int width = tile_size * map.size();
+    const int height = tile_size * map[0].size();
+
+    std::cout << width << std::endl;
+    std::cout << height << std::endl;
 
     avformat_network_init();
 
