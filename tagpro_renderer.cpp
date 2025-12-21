@@ -1,4 +1,10 @@
 #define __STDC_CONSTANT_MACROS
+//puv constants
+#define WR 0.299
+#define WB 0.114
+#define WG 0.587
+#define UMAX 0.436
+#define VMAX 0.615
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -14,9 +20,11 @@ extern "C" {
 #include <vector>
 #include "nlohmann/json.hpp"
 
+
 using json = nlohmann::json;
 
 std::vector<std::vector<std::string>> getMap(std::string filename);
+std::vector<double> RGB_to_PUV(int r, int g, int b);
 
 int main() {
     const char* filename = "output.mp4";
@@ -94,6 +102,8 @@ int main() {
 
     AVPacket* pkt = av_packet_alloc();  // Use av_packet_alloc instead
 
+    std::vector<double> puv = RGB_to_PUV(256,5,5);
+
     for (int i = 0; i < fps * duration_sec; ++i) {
         av_frame_make_writable(frame);
         frame->pts = i; 
@@ -101,8 +111,8 @@ int main() {
         // Simple color pattern - cycles through brightness
         int brightness = (i * 255) / (fps * duration_sec);
         memset(frame->data[0], brightness, width * height);      // Y
-        memset(frame->data[1], 128, width * height / 4);         // U
-        memset(frame->data[2], 128, width * height / 4);         // V
+        memset(frame->data[1], puv[1], width * height / 4);         // U
+        memset(frame->data[2], puv[2], width * height / 4);         // V
 
         if (avcodec_send_frame(cctx, frame) < 0) {
             std::cerr << "Error sending frame\n";
@@ -174,3 +184,14 @@ std::vector<std::vector<std::string>> getMap(std::string filename){
     }
     return map;
 }
+
+std::vector<double> RGB_to_PUV(int R, int G, int B){
+    double Y = WR * R + WG * G + WB * B;
+    double U = UMAX * (B-Y)/(1-WB);
+    double V = VMAX * (R-Y)/(1-WR);
+
+    return {Y, U, V};
+}   
+
+
+
