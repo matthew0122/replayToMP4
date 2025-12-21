@@ -9,6 +9,14 @@ extern "C" {
 
 #include <iostream>
 #include <cstring>
+#include <fstream>
+#include <string>
+#include <vector>
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
+
+std::vector<std::vector<std::string>> getMap(std::string filename);
 
 int main() {
     const char* filename = "output.mp4";
@@ -37,7 +45,7 @@ int main() {
     // Create new stream
     AVStream* stream = avformat_new_stream(fmt_ctx, codec);
     stream->id = 0;
-    stream->time_base = {1, fps};  // Set stream time_base
+    stream->time_base = {1, fps}; 
 
     // Allocate codec context
     AVCodecContext* cctx = avcodec_alloc_context3(codec);
@@ -79,7 +87,7 @@ int main() {
 
     for (int i = 0; i < fps * duration_sec; ++i) {
         av_frame_make_writable(frame);
-        frame->pts = i;  // This is correct now with time_base = 1/fps
+        frame->pts = i; 
 
         // Simple color pattern - cycles through brightness
         int brightness = (i * 255) / (fps * duration_sec);
@@ -124,5 +132,36 @@ int main() {
     avformat_free_context(fmt_ctx);
 
     std::cout << "MP4 written to output.mp4 (" << duration_sec << " seconds at " << fps << " fps)\n";
+
+    getMap("replay.ndjson");
     return 0;
+}
+
+std::vector<std::vector<std::string>> getMap(std::string filename){
+    std::ifstream file(filename);
+    std::string str; 
+    std::vector<std::vector<std::string>> map;
+    json j;
+    bool inElement = false;
+    while(std::getline(file, str)){
+        if(str.rfind("[0,\"map\",{\"tiles\":", 0) == 0){
+            j = json::parse(str);
+            break;
+        }
+    }
+    auto& tiles =  j[2]["tiles"];
+    for (const auto& row : tiles){
+        std::vector<std::string> rowVec;
+        for (const auto& cell : row){
+            if(cell.is_string()){
+                rowVec.push_back(cell.get<std::string>());
+            }
+            else {
+                rowVec.push_back(cell.dump());
+            }
+
+        }
+        map.push_back(rowVec);
+    }
+    return map;
 }
