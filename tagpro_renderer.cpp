@@ -26,6 +26,7 @@ using json = nlohmann::json;
 std::vector<std::vector<std::string>> getMap(std::string filename);
 std::vector<double> RGB_to_PUV(int r, int g, int b);
 void rgb_to_yuv420p(uint8_t* rgb_data, int width, int height, AVFrame* yuv_frame);
+void drawWall(int x, int y, std::vector<uint8_t>*rgb, int width);
 
 int main() {
     const char* filename = "output.mp4";
@@ -114,11 +115,19 @@ int main() {
             for (int x = 0; x < width; x++) {
                 int j = (y * width + x) * 3;
 
-                rgb[j + 0*i] = x % 256;      // R
-                rgb[j + 1*i] = y % 256;      // G
-                rgb[j + 2*i] = 128;          // B
+                rgb[j + 0] = x % 256;      // R
+                rgb[j + 1] = y % 256;      // G
+                rgb[j + 2] = 128;          // B
             }
         }
+        for(int i = 0; i < map.size(); i++){
+            for(int j = 0; j < map[i].size(); j++){
+                if(map[i][j] == "1"){
+                    drawWall(i,j,&rgb, width);
+                }
+            }
+        }
+        // drawWall(10,10,&rgb,width);
         rgb_to_yuv420p(rgb.data(), width, height, frame);
         frame->pts = i; 
 
@@ -232,5 +241,19 @@ void rgb_to_yuv420p(uint8_t* rgb_data, int width, int height, AVFrame* yuv_frame
         yuv_frame->linesize
     );
 }
+
+void drawWall(int x, int y, std::vector<uint8_t> *rgb, int width){
+    const int tile_size = 40;
+    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
+        for (int j = x*tile_size; j < (x+1)*tile_size; j++) {
+            int k = (i * width + j) * 3;
+
+            (*rgb)[k + 0] = 128;      // R
+            (*rgb)[k + 1] = 128;      // G
+            (*rgb)[k + 2] = 128;      // B
+        }
+    }
+}
+
 
 
