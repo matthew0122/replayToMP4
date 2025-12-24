@@ -19,6 +19,7 @@ extern "C" {
 #include <string>
 #include <vector>
 #include "nlohmann/json.hpp"
+#include "constants.hpp"
 
 
 using json = nlohmann::json;
@@ -32,6 +33,7 @@ void draw1_2(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_3(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_4(int x, int y, std::vector<uint8_t> *rgb, int width);
 void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width);
+void drawBall(int x, int y, std::vector<uint8_t> *rgb, int width);
 
 int main() {
     const char* filename = "output.mp4";
@@ -39,12 +41,11 @@ int main() {
     // const int height = 480;
     const int fps = 60;
     const int duration_sec = 5;
-    const int tile_size = 40;
     const std::string replayFile = "replay.ndjson";
 
     std::vector<std::vector<std::string>> map = getMap(replayFile);
-    const int width = tile_size * map.size();
-    const int height = tile_size * map[0].size();
+    const int width = TILE_SIZE * map.size();
+    const int height = TILE_SIZE * map[0].size();
 
     std::cout << width << std::endl;
     std::cout << height << std::endl;
@@ -263,100 +264,82 @@ void rgb_to_yuv420p(uint8_t* rgb_data, int width, int height, AVFrame* yuv_frame
     );
 }
 
-void drawWall(int x, int y, std::vector<uint8_t> *rgb, int width){
-    const int tile_size = 40;
-    const int wallR = 64;
-    const int wallG = 64;
-    const int wallB = 64;
-    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
-        for (int j = x*tile_size; j < (x+1)*tile_size; j++) {
+void drawWall(int x, int y, std::vector<uint8_t> *rgb, int width){   
+    for (int i = y*TILE_SIZE; i < (y+1)*TILE_SIZE; i++) {
+        for (int j = x*TILE_SIZE; j < (x+1)*TILE_SIZE; j++) {
             int k = (i * width + j) * 3;
 
-            (*rgb)[k + 0] = wallR;      // R
-            (*rgb)[k + 1] = wallG;      // G
-            (*rgb)[k + 2] = wallB;      // B
+            (*rgb)[k + 0] = WALL_R;      // R
+            (*rgb)[k + 1] = WALL_G;      // G
+            (*rgb)[k + 2] = WALL_B;      // B
         }
     }
 }
 
 void draw1_1(int x, int y, std::vector<uint8_t> *rgb, int width){
     drawFloor(x,y,rgb, width);
-    const int tile_size = 40;
-    const int wallR = 64;
-    const int wallG = 64;
-    const int wallB = 64;
-    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
-        for (int j = x*tile_size; j < (x+1)*tile_size-(40-i%tile_size); j++) {
+    for (int i = y*TILE_SIZE; i < (y+1)*TILE_SIZE; i++) {
+        for (int j = x*TILE_SIZE; j < (x+1)*TILE_SIZE-(40-i%TILE_SIZE); j++) {
             int k = (i * width + j) * 3;
 
-            (*rgb)[k + 0] = wallR;      // R
-            (*rgb)[k + 1] = wallG;      // G
-            (*rgb)[k + 2] = wallB;      // B
+            (*rgb)[k + 0] = WALL_R;      // R
+            (*rgb)[k + 1] = WALL_G;      // G
+            (*rgb)[k + 2] = WALL_B;      // B
         }
     }
 }
 
 void draw1_2(int x, int y, std::vector<uint8_t> *rgb, int width){
-    const int tile_size = 40;
-    const int wallR = 64;
-    const int wallG = 64;
-    const int wallB = 64;
     drawFloor(x,y,rgb, width);//TODO: Optimize this
-    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
-        for (int j = x*tile_size; j < (x+1)*tile_size-(i%tile_size); j++) {
+    for (int i = y*TILE_SIZE; i < (y+1)*TILE_SIZE; i++) {
+        for (int j = x*TILE_SIZE; j < (x+1)*TILE_SIZE-(i%TILE_SIZE); j++) {
             int k = (i * width + j) * 3;
 
-            (*rgb)[k + 0] = wallR;      // R
-            (*rgb)[k + 1] = wallG;      // G
-            (*rgb)[k + 2] = wallB;      // B
+            (*rgb)[k + 0] = WALL_R;      // R
+            (*rgb)[k + 1] = WALL_G;      // G
+            (*rgb)[k + 2] = WALL_B;      // B
         }
     }
 }
 void draw1_3(int x, int y, std::vector<uint8_t> *rgb, int width){
-    const int tile_size = 40;
-    const int wallR = 64;
-    const int wallG = 64;
-    const int wallB = 64;
     drawFloor(x,y,rgb, width);
-    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
-        for (int j = x*tile_size+(i%tile_size); j < (x+1)*tile_size; j++) {
+    for (int i = y*TILE_SIZE; i < (y+1)*TILE_SIZE; i++) {
+        for (int j = x*TILE_SIZE+(i%TILE_SIZE); j < (x+1)*TILE_SIZE; j++) {
             int k = (i * width + j) * 3;
 
-            (*rgb)[k + 0] = wallR;      // R
-            (*rgb)[k + 1] = wallG;      // G
-            (*rgb)[k + 2] = wallB;      // B
+            (*rgb)[k + 0] = WALL_R;      // R
+            (*rgb)[k + 1] = WALL_G;      // G
+            (*rgb)[k + 2] = WALL_B;      // B
         }
     }
 }
 void draw1_4(int x, int y, std::vector<uint8_t> *rgb, int width){
-    const int tile_size = 40;
-    const int wallR = 64;
-    const int wallG = 64;
-    const int wallB = 64;
     drawFloor(x,y,rgb, width);
-    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
-        for (int j = x*tile_size+(40-i%tile_size); j < (x+1)*tile_size; j++) {
+    for (int i = y*TILE_SIZE; i < (y+1)*TILE_SIZE; i++) {
+        for (int j = x*TILE_SIZE+(40-i%TILE_SIZE); j < (x+1)*TILE_SIZE; j++) {
             int k = (i * width + j) * 3;
 
-            (*rgb)[k + 0] = wallR;      // R
-            (*rgb)[k + 1] = wallG;      // G
-            (*rgb)[k + 2] = wallB;      // B
+            (*rgb)[k + 0] = WALL_R;      // R
+            (*rgb)[k + 1] = WALL_G;      // G
+            (*rgb)[k + 2] = WALL_B;      // B
         }
     }
 }
 
 void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width){
-    const int tile_size = 40;
-    const int floorR = 164;
-    const int floorG = 164;
-    const int floorB = 164;
-    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
-        for (int j = x*tile_size; j < (x+1)*tile_size; j++) {
+    for (int i = y*TILE_SIZE; i < (y+1)*TILE_SIZE; i++) {
+        for (int j = x*TILE_SIZE; j < (x+1)*TILE_SIZE; j++) {
             int k = (i * width + j) * 3;
 
-            (*rgb)[k + 0] = floorR;      // R
-            (*rgb)[k + 1] = floorG;      // G
-            (*rgb)[k + 2] = floorB;      // B
+            (*rgb)[k + 0] = FLOOR_R;      // R
+            (*rgb)[k + 1] = FLOOR_G;      // G
+            (*rgb)[k + 2] = FLOOR_B;      // B
         }
     }
 }
+
+void drawBall(int x, int y, std::vector<uint8_t> *rgb, int width){
+    const int radius = 19;
+}
+
+
