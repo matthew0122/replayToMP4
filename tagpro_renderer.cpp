@@ -27,6 +27,8 @@ std::vector<std::vector<std::string>> getMap(std::string filename);
 std::vector<double> RGB_to_PUV(int r, int g, int b);
 void rgb_to_yuv420p(uint8_t* rgb_data, int width, int height, AVFrame* yuv_frame);
 void drawWall(int x, int y, std::vector<uint8_t>*rgb, int width);
+void draw1_1(int x, int y, std::vector<uint8_t> *rgb, int width);
+void draw1_2(int x, int y, std::vector<uint8_t> *rgb, int width);
 
 int main() {
     const char* filename = "output.mp4";
@@ -122,8 +124,15 @@ int main() {
         }
         for(int i = 0; i < map.size(); i++){
             for(int j = 0; j < map[i].size(); j++){
-                if(map[i][j] == "1"){
+                std::string tile = map[i][j];
+                if(tile == "1"){
                     drawWall(i,j,&rgb, width);
+                }
+                else if (tile == "1.1"){
+                    draw1_1(i,j, &rgb, width);
+                }
+                else if (tile == "1.2"){
+                    draw1_2(i,j, &rgb, width);
                 }
             }
         }
@@ -255,5 +264,30 @@ void drawWall(int x, int y, std::vector<uint8_t> *rgb, int width){
     }
 }
 
+void draw1_1(int x, int y, std::vector<uint8_t> *rgb, int width){
+    const int tile_size = 40;
+    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
+        for (int j = x*tile_size; j < (x+1)*tile_size-(40-i%tile_size); j++) {
+            int k = (i * width + j) * 3;
+
+            (*rgb)[k + 0] = 128;      // R
+            (*rgb)[k + 1] = 128;      // G
+            (*rgb)[k + 2] = 128;      // B
+        }
+    }
+}
+
+void draw1_2(int x, int y, std::vector<uint8_t> *rgb, int width){
+    const int tile_size = 40;
+    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
+        for (int j = x*tile_size; j < (x+1)*tile_size-(i%tile_size); j++) {
+            int k = (i * width + j) * 3;
+
+            (*rgb)[k + 0] = 128;      // R
+            (*rgb)[k + 1] = 128;      // G
+            (*rgb)[k + 2] = 128;      // B
+        }
+    }
+}
 
 
