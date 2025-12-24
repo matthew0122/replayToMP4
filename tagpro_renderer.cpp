@@ -25,6 +25,7 @@ using json = nlohmann::json;
 
 std::vector<std::vector<std::string>> getMap(std::string filename);
 std::vector<double> RGB_to_PUV(int r, int g, int b);
+void rgb_to_yuv420p(uint8_t* rgb_data, int width, int height, AVFrame* yuv_frame);
 
 int main() {
     const char* filename = "output.mp4";
@@ -103,16 +104,29 @@ int main() {
     AVPacket* pkt = av_packet_alloc();  // Use av_packet_alloc instead
 
     std::vector<double> puv = RGB_to_PUV(256,5,5);
+    std::vector<uint8_t> rgb(width * height * 3);
 
     for (int i = 0; i < fps * duration_sec; ++i) {
+        
         av_frame_make_writable(frame);
+        
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int j = (y * width + x) * 3;
+
+                rgb[j + 0*i] = x % 256;      // R
+                rgb[j + 1*i] = y % 256;      // G
+                rgb[j + 2*i] = 128;          // B
+            }
+        }
+        rgb_to_yuv420p(rgb.data(), width, height, frame);
         frame->pts = i; 
 
         // Simple color pattern - cycles through brightness
-        int brightness = (i * 255) / (fps * duration_sec);
-        memset(frame->data[0], brightness, width * height);      // Y
-        memset(frame->data[1], puv[1], width * height / 4);         // U
-        memset(frame->data[2], puv[2], width * height / 4);         // V
+        // int brightness = (i * 255) / (fps * duration_sec);
+        // memset(frame->data[0], brightness, width * height);      // Y
+        // memset(frame->data[1], puv[1], width * height / 4);         // U
+        // memset(frame->data[2], puv[2], width * height / 4);         // V
 
         if (avcodec_send_frame(cctx, frame) < 0) {
             std::cerr << "Error sending frame\n";
@@ -193,5 +207,30 @@ std::vector<double> RGB_to_PUV(int R, int G, int B){
     return {Y, U, V};
 }   
 
+void rgb_to_yuv420p(uint8_t* rgb_data, int width, int height, AVFrame* yuv_frame) {
+    static SwsContext* sws_ctx = nullptr;
+
+    if (!sws_ctx) {
+        sws_ctx = sws_getContext(
+            width, height, AV_PIX_FMT_RGB24,   // source
+            width, height, AV_PIX_FMT_YUV420P, // destination
+            SWS_BILINEAR,
+            nullptr, nullptr, nullptr
+        );
+    }
+
+    const uint8_t* src_slices[1] = { rgb_data };
+    int src_stride[1] = { 3 * width };
+
+    sws_scale(
+        sws_ctx,
+        src_slices,
+        src_stride,
+        0,
+        height,
+        yuv_frame->data,
+        yuv_frame->linesize
+    );
+}
 
 
