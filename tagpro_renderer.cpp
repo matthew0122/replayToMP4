@@ -31,6 +31,7 @@ void draw1_1(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_2(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_3(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_4(int x, int y, std::vector<uint8_t> *rgb, int width);
+void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width);
 
 int main() {
     const char* filename = "output.mp4";
@@ -141,6 +142,9 @@ int main() {
                 }
                 else if (tile == "1.4"){
                     draw1_4(i,j, &rgb, width);
+                }
+                else if (tile == "2"){
+                    drawFloor(i,j,&rgb, width);
                 }
             }
         }
@@ -276,6 +280,7 @@ void drawWall(int x, int y, std::vector<uint8_t> *rgb, int width){
 }
 
 void draw1_1(int x, int y, std::vector<uint8_t> *rgb, int width){
+    drawFloor(x,y,rgb, width);
     const int tile_size = 40;
     const int wallR = 64;
     const int wallG = 64;
@@ -296,6 +301,7 @@ void draw1_2(int x, int y, std::vector<uint8_t> *rgb, int width){
     const int wallR = 64;
     const int wallG = 64;
     const int wallB = 64;
+    drawFloor(x,y,rgb, width);//TODO: Optimize this
     for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
         for (int j = x*tile_size; j < (x+1)*tile_size-(i%tile_size); j++) {
             int k = (i * width + j) * 3;
@@ -311,6 +317,7 @@ void draw1_3(int x, int y, std::vector<uint8_t> *rgb, int width){
     const int wallR = 64;
     const int wallG = 64;
     const int wallB = 64;
+    drawFloor(x,y,rgb, width);
     for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
         for (int j = x*tile_size+(i%tile_size); j < (x+1)*tile_size; j++) {
             int k = (i * width + j) * 3;
@@ -326,6 +333,7 @@ void draw1_4(int x, int y, std::vector<uint8_t> *rgb, int width){
     const int wallR = 64;
     const int wallG = 64;
     const int wallB = 64;
+    drawFloor(x,y,rgb, width);
     for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
         for (int j = x*tile_size+(40-i%tile_size); j < (x+1)*tile_size; j++) {
             int k = (i * width + j) * 3;
@@ -337,4 +345,18 @@ void draw1_4(int x, int y, std::vector<uint8_t> *rgb, int width){
     }
 }
 
+void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width){
+    const int tile_size = 40;
+    const int floorR = 164;
+    const int floorG = 164;
+    const int floorB = 164;
+    for (int i = y*tile_size; i < (y+1)*tile_size; i++) {
+        for (int j = x*tile_size; j < (x+1)*tile_size; j++) {
+            int k = (i * width + j) * 3;
 
+            (*rgb)[k + 0] = floorR;      // R
+            (*rgb)[k + 1] = floorG;      // G
+            (*rgb)[k + 2] = floorB;      // B
+        }
+    }
+}
