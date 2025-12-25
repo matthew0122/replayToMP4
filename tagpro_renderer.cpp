@@ -33,7 +33,7 @@ void draw1_2(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_3(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_4(int x, int y, std::vector<uint8_t> *rgb, int width);
 void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width);
-void drawBall(int x, int y, std::vector<uint8_t> *rgb, int width);
+void drawBall(int centerX, int centerY, std::vector<uint8_t> *rgb, int width);
 
 int main() {
     const char* filename = "output.mp4";
@@ -149,7 +149,7 @@ int main() {
                 }
             }
         }
-        // drawWall(10,10,&rgb,width);
+        drawBall(100,100,&rgb,width);
         rgb_to_yuv420p(rgb.data(), width, height, frame);
         frame->pts = i; 
 
@@ -338,8 +338,57 @@ void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width){
     }
 }
 
-void drawBall(int x, int y, std::vector<uint8_t> *rgb, int width){
-    const int radius = 19;
+void drawBall(int centerX, int centerY, std::vector<uint8_t> *rgb, int width){
+    const int diameter = BALL_RADIUS * 2;
+    int x = (BALL_RADIUS - 1);
+    int y = 0;
+    int tx = 1;
+    int ty = 1;
+    int error = (tx - diameter);
+
+    while (x >= y){
+      //Each renders an octant of the circle
+      for(int i = centerY - y; i <= centerY + y; i++){
+        int k = ((centerX+x) * width + i) * 3;
+        (*rgb)[k] = RED_R;
+        (*rgb)[k+1] = RED_G;
+        (*rgb)[k+2] = RED_B;
+
+        k = ((centerX-x) * width + i) * 3;
+        (*rgb)[k] = RED_R;
+        (*rgb)[k+1] = RED_G;
+        (*rgb)[k+2] = RED_B;
+        // SDL_RenderPoint(renderer, centreX + x, i);
+        // SDL_RenderPoint(renderer, centreX - x, i);
+      }
+      for(int i = centerY - x; i <= centerY + x; i++){
+        int k = ((centerX+y) * width + i) * 3;
+        (*rgb)[k] = RED_R;
+        (*rgb)[k+1] = RED_G;
+        (*rgb)[k+2] = RED_B;
+
+        k = ((centerX-y) * width + i) * 3;
+        (*rgb)[k] = RED_R;
+        (*rgb)[k+1] = RED_G;
+        (*rgb)[k+2] = RED_B;
+        // SDL_RenderPoint(renderer, centreX + y, i);
+        // SDL_RenderPoint(renderer, centreX - y, i);
+      }
+
+      if (error <= 0)
+      {
+         ++y;
+         error += ty;
+         ty += 2;
+      }
+
+      if (error > 0)
+      {
+         --x;
+         tx += 2;
+         error += (tx - diameter);
+      }
+   }
 }
 
 
