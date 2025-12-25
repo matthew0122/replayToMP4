@@ -33,7 +33,7 @@ void draw1_2(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_3(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_4(int x, int y, std::vector<uint8_t> *rgb, int width);
 void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width);
-void drawBall(int centerX, int centerY, std::vector<uint8_t> *rgb, int width);
+void drawBall(int centerX, int centerY, std::vector<uint8_t> *rgb, int width, bool red);
 
 int main() {
     const char* filename = "output.mp4";
@@ -149,7 +149,8 @@ int main() {
                 }
             }
         }
-        drawBall(100,100,&rgb,width);
+        drawBall(100,100,&rgb,width, true);
+        drawBall(200,200,&rgb,width, false);
         rgb_to_yuv420p(rgb.data(), width, height, frame);
         frame->pts = i; 
 
@@ -338,39 +339,47 @@ void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width){
     }
 }
 
-void drawBall(int centerX, int centerY, std::vector<uint8_t> *rgb, int width){
+void drawBall(int centerX, int centerY, std::vector<uint8_t> *rgb, int width, bool isRed){
     const int diameter = BALL_RADIUS * 2;
     int x = (BALL_RADIUS - 1);
     int y = 0;
     int tx = 1;
     int ty = 1;
     int error = (tx - diameter);
+    int red = RED_R;
+    int green = RED_G;
+    int blue = RED_B;
+    if(!isRed){
+        red = BLUE_R;
+        green = BLUE_G;
+        blue = BLUE_B;
+    }
 
     while (x >= y){
       //Each renders an octant of the circle
       for(int i = centerY - y; i <= centerY + y; i++){
         int k = ((centerX+x) * width + i) * 3;
-        (*rgb)[k] = RED_R;
-        (*rgb)[k+1] = RED_G;
-        (*rgb)[k+2] = RED_B;
+        (*rgb)[k] = red;
+        (*rgb)[k+1] = green;
+        (*rgb)[k+2] = blue;
 
         k = ((centerX-x) * width + i) * 3;
-        (*rgb)[k] = RED_R;
-        (*rgb)[k+1] = RED_G;
-        (*rgb)[k+2] = RED_B;
+        (*rgb)[k] = red;
+        (*rgb)[k+1] = green;
+        (*rgb)[k+2] = blue;
         // SDL_RenderPoint(renderer, centreX + x, i);
         // SDL_RenderPoint(renderer, centreX - x, i);
       }
       for(int i = centerY - x; i <= centerY + x; i++){
         int k = ((centerX+y) * width + i) * 3;
-        (*rgb)[k] = RED_R;
-        (*rgb)[k+1] = RED_G;
-        (*rgb)[k+2] = RED_B;
+        (*rgb)[k] = red;
+        (*rgb)[k+1] = green;
+        (*rgb)[k+2] = blue;
 
         k = ((centerX-y) * width + i) * 3;
-        (*rgb)[k] = RED_R;
-        (*rgb)[k+1] = RED_G;
-        (*rgb)[k+2] = RED_B;
+        (*rgb)[k] = red;
+        (*rgb)[k+1] = green;
+        (*rgb)[k+2] = blue;
         // SDL_RenderPoint(renderer, centreX + y, i);
         // SDL_RenderPoint(renderer, centreX - y, i);
       }

@@ -12,9 +12,13 @@ const int WALL_B = 64;
 const int FLOOR_R = 164;
 const int FLOOR_G = 164;
 const int FLOOR_B = 164;
+    //Balls
 const int RED_R = 255;
 const int RED_G = 50;
 const int RED_B = 50;
+const int BLUE_R = 50;
+const int BLUE_G = 50;
+const int BLUE_B = 255;
 
 
 #endif
