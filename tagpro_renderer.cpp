@@ -34,12 +34,13 @@ void draw1_3(int x, int y, std::vector<uint8_t> *rgb, int width);
 void draw1_4(int x, int y, std::vector<uint8_t> *rgb, int width);
 void drawFloor(int x, int y, std::vector<uint8_t> *rgb, int width);
 void drawBall(int centerX, int centerY, std::vector<uint8_t> *rgb, int width, bool red);
+std::vector<std::vector<double>> parseReplay(std::string filename);
 
 int main() {
     const char* filename = "output.mp4";
     // const int width = 640;
     // const int height = 480;
-    const int fps = 60;
+    const int fps = 4;
     const int duration_sec = 5;
     const std::string replayFile = "replay.ndjson";
 
@@ -112,8 +113,12 @@ int main() {
 
     std::vector<double> puv = RGB_to_PUV(256,5,5);
     std::vector<uint8_t> rgb(width * height * 3);
+    // std::ifstream file("replay.ndjson");
+    // std::string str; 
+    int i = 0;
+    auto positions = parseReplay("replay.ndjson");
 
-    for (int i = 0; i < fps * duration_sec; ++i) {
+    for (i = 0; i < fps * duration_sec; ++i) {
         
         av_frame_make_writable(frame);
         
@@ -149,16 +154,11 @@ int main() {
                 }
             }
         }
-        drawBall(100,100,&rgb,width, true);
-        drawBall(200,200,&rgb,width, false);
+        // std::cout << static_cast<int>(positions[i][0]*100) << " " << static_cast<int>(positions[i][1]*100) << std::endl;
+        drawBall(static_cast<int>(positions[i][0]*100),static_cast<int>(positions[i][1]*100),&rgb,width, true);
+        drawBall(600,960,&rgb,width, false);
         rgb_to_yuv420p(rgb.data(), width, height, frame);
         frame->pts = i; 
-
-        // Simple color pattern - cycles through brightness
-        // int brightness = (i * 255) / (fps * duration_sec);
-        // memset(frame->data[0], brightness, width * height);      // Y
-        // memset(frame->data[1], puv[1], width * height / 4);         // U
-        // memset(frame->data[2], puv[2], width * height / 4);         // V
 
         if (avcodec_send_frame(cctx, frame) < 0) {
             std::cerr << "Error sending frame\n";
@@ -198,7 +198,7 @@ int main() {
 
     std::cout << "MP4 written to output.mp4 (" << duration_sec << " seconds at " << fps << " fps)\n";
 
-    getMap("replay.ndjson");
+    
     return 0;
 }
 
@@ -400,4 +400,40 @@ void drawBall(int centerX, int centerY, std::vector<uint8_t> *rgb, int width, bo
    }
 }
 
-
+std::vector<std::vector<double>> parseReplay(std::string filename){
+    std::ifstream file(filename);
+    std::string str; 
+    json j;
+    bool inElement = false;
+    std::vector<std::vector<double>> positions;
+    while(std::getline(file, str)){
+        j = json::parse(str);
+        if(j[1] == "p"){
+            for(auto player : j[2]){
+                if (player["id"] == 1){
+                    if(player["rx"] != nullptr && player["ry"] != nullptr){
+                        std::vector<double> currentPos = {player["ry"], player["rx"]};
+                        positions.push_back(currentPos);
+                    }
+                    else if(player["rx"] != nullptr){
+                        if(positions.size() == 0){
+                            continue;
+                        }
+                        std::vector<double> currentPos = {positions[positions.size()-1][0], player["rx"]};
+                        positions.push_back(currentPos);
+                    }
+                    else if(player["ry"] != nullptr){
+                        if(positions.size() == 0){
+                            continue;
+                        }
+                        std::vector<double> currentPos = {player["ry"], positions[positions.size()-1][0]};
+                        positions.push_back(currentPos);
+                    }
+                    
+                }
+            }
+        }
+    }
+    return positions;
+    
+}
