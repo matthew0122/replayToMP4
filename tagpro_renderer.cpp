@@ -19,6 +19,7 @@ extern "C" {
 #include <string>
 #include <vector>
 #include "nlohmann/json.hpp"
+#include "physics.hpp"
 #include "constants.hpp"
 
 
@@ -41,7 +42,7 @@ int main() {
     // const int width = 640;
     // const int height = 480;
     const int fps = 4;
-    const int duration_sec = 5;
+    const int duration_sec = 20;
     const std::string replayFile = "replay.ndjson";
 
     std::vector<std::vector<std::string>> map = getMap(replayFile);
