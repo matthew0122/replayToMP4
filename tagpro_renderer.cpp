@@ -118,6 +118,10 @@ int main() {
     // std::string str; 
     int i = 0;
     auto positions = parseReplay("replay.ndjson");
+    b2WorldDef worldDef = b2DefaultWorldDef();
+    worldDef.gravity = (b2Vec2){0.0f, 0.0f};
+    b2WorldId worldId = b2CreateWorld(&worldDef);
+    createBall(worldId, static_cast<int>(positions[i][0]*100),static_cast<int>(positions[i][1]*100), BALL_RADIUS, true);
 
     for (i = 0; i < fps * duration_sec; ++i) {
         
