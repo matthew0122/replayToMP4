@@ -153,26 +153,26 @@ int main() {
                 rgb[j + 2] = 128;          // B
             }
         }
-        for(int i = 0; i < map.size(); i++){
-            for(int j = 0; j < map[i].size(); j++){
-                std::string tile = map[i][j];
+        for(int k = 0; k < map.size(); k++){
+            for(int j = 0; j < map[k].size(); j++){
+                std::string tile = map[k][j];
                 if(tile == "1"){
-                    drawWall(i,j,&rgb, width);
+                    drawWall(k,j,&rgb, width);
                 }
                 else if (tile == "1.1"){
-                    draw1_1(i,j, &rgb, width);
+                    draw1_1(k,j, &rgb, width);
                 }
                 else if (tile == "1.2"){
-                    draw1_2(i,j, &rgb, width);
+                    draw1_2(k,j, &rgb, width);
                 }
                 else if (tile == "1.3"){
-                    draw1_3(i,j, &rgb, width);
+                    draw1_3(k,j, &rgb, width);
                 }
                 else if (tile == "1.4"){
-                    draw1_4(i,j, &rgb, width);
+                    draw1_4(k,j, &rgb, width);
                 }
                 else if (tile == "2"){
-                    drawFloor(i,j,&rgb, width);
+                    drawFloor(k,j,&rgb, width);
                 }
             }
         }
@@ -209,16 +209,17 @@ int main() {
             pos.x = positions[i/(fps/4)][0]*100;
             pos.y = positions[i/(fps/4)][1]*100;
             b2Transform t = b2Body_GetTransform(ball1.bodyId);
-            b2Rot rot = b2MakeRot(b2Rot_GetAngle(t.q));
 
             b2Vec2 velocity = {positions[i/(fps/4)][2]*100,positions[i/(fps/4)][3]*100};
 
             b2Body_SetTransform(ball1.bodyId, pos, t.q);
             b2Body_SetLinearVelocity(ball1.bodyId, velocity);
         }
-        drawBall(static_cast<int>(pos.x),static_cast<int>(pos.y),&rgb,width, true);
         updateVelocity(ball1, timeStep);
         b2World_Step(worldId, timeStep, subStepCount);
+        pos = b2Body_GetPosition(ball1.bodyId);
+        drawBall(static_cast<int>(pos.x),static_cast<int>(pos.y),&rgb,width, true);
+
         // drawBall(600,960,&rgb,width, false);
         rgb_to_yuv420p(rgb.data(), width, height, frame);
         frame->pts = i; 
