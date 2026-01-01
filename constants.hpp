@@ -25,7 +25,7 @@ const int BLUE_B = 255;
 //struct/enum
 struct Ball {
     bool red; //true for red, false for blue
-    bool keys[4] = {false, false, false, false}; //Right, Left, Up, Down
+    int keys[4] = {0, 0, 0, 0}; //Right, Left, Up, Down
     b2BodyId bodyId;
     b2ShapeId shapeId;
 };

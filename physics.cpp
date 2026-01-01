@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <assert.h>
+#include <iostream>
 
 Ball createBall(b2WorldId worldId, float x, float y, float radius, bool color){
     b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -61,16 +62,16 @@ void initializeWalls(b2WorldId worldId, std::vector<std::vector<std::string>> ma
 
 void updateVelocity(Ball player, float timeStep){
     b2Vec2 velocity = b2Body_GetLinearVelocity(player.bodyId);
-    if (player.keys[0]){ //right
+    if (player.keys[0] > 0 && player.keys[0] > player.keys[1]){ //right
         velocity.x += ACCELERATION * TPU * timeStep;
     }
-    if (player.keys[1]){ //left
+    if (player.keys[1] > 0 && player.keys[1] > player.keys[0]){ //left
         velocity.x -= ACCELERATION * TPU * timeStep;
     }
-    if (player.keys[2]){ //up
+    if (player.keys[2] > 0 && player.keys[2] > player.keys[3]){ //up
         velocity.y -= ACCELERATION * TPU * timeStep;
     }
-    if (player.keys[3]){ //down
+    if (player.keys[3] > 0 && player.keys[3] > player.keys[2]){ //down
         velocity.y += ACCELERATION * TPU * timeStep;
     }
     //apply drag
@@ -96,7 +97,6 @@ void updateVelocity(Ball player, float timeStep){
     else if (velocity.y < -MAX_SPEED * TPU){
         velocity.y = -MAX_SPEED * TPU;
     }
-
     // std::cout << velocity.x << ", " << velocity.y << std::endl;
     b2Body_SetLinearVelocity(player.bodyId, velocity);
 }

@@ -41,7 +41,9 @@ int main() {
     const char* filename = "output.mp4";
     // const int width = 640;
     // const int height = 480;
-    const int fps = 4;
+    const int fps = 60;
+    const float timeStep = 1.0f/fps;
+    const int subStepCount = 4;
     const int duration_sec = 20;
     const std::string replayFile = "replay.ndjson";
 
@@ -121,7 +123,22 @@ int main() {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = (b2Vec2){0.0f, 0.0f};
     b2WorldId worldId = b2CreateWorld(&worldDef);
-    createBall(worldId, static_cast<int>(positions[i][0]*100),static_cast<int>(positions[i][1]*100), BALL_RADIUS, true);
+    Ball ball1 = createBall(worldId, static_cast<int>(positions[i][0]*100),static_cast<int>(positions[i][1]*100), BALL_RADIUS, true);
+    int jump_amt = 1000 / fps;
+    //reparsing replay to get keys and such
+    std::ifstream file(replayFile);
+    std::string str; 
+    json j;
+    while(std::getline(file, str)){ // get to starting spot in replay
+        j = json::parse(str);
+        if(j[0] > 20000){
+            break;
+        }
+    }
+    int ending = 20000 + jump_amt;
+
+
+
 
     for (i = 0; i < fps * duration_sec; ++i) {
         
@@ -160,8 +177,45 @@ int main() {
             }
         }
         // std::cout << static_cast<int>(positions[i][0]*100) << " " << static_cast<int>(positions[i][1]*100) << std::endl;
-        drawBall(static_cast<int>(positions[i][0]*100),static_cast<int>(positions[i][1]*100),&rgb,width, true);
-        drawBall(600,960,&rgb,width, false);
+        while(j[0] <= ending){
+            if(j[1] == "p"){
+                for(auto player : j[2]){
+                    if (player["id"] == 1){
+                        if(player["right"] != nullptr){
+                            ball1.keys[0] = player["right"];
+                        }
+                        if(player["left"] != nullptr){
+                            ball1.keys[1] = player["left"];
+                        }
+                        if(player["up"] != nullptr){
+                            ball1.keys[2] = player["up"];
+                        }
+                        if(player["down"] != nullptr){
+                            ball1.keys[3] = player["down"];
+                        }
+                    }
+                }
+            }
+            std::getline(file, str);
+            j = json::parse(str);
+        }
+        
+        updateVelocity(ball1, timeStep);
+        b2World_Step(worldId, timeStep, subStepCount);
+        b2Vec2 pos = b2Body_GetPosition(ball1.bodyId);
+        
+        if(i % (fps/4) == 0){ //1/4 second has passed, user server vals
+            std::cout << "X:" << pos.x << std::endl;
+            std::cout << "server Pos: " << positions[i/(fps/4)][0] <<std::endl;
+            pos.x = positions[i/(fps/4)][0]*100;
+            pos.y = positions[i/(fps/4)][1]*100;
+            b2Transform t = b2Body_GetTransform(ball1.bodyId);
+            b2Rot rot = b2MakeRot(b2Rot_GetAngle(t.q));
+
+            b2Body_SetTransform(ball1.bodyId, pos, rot);
+        }
+        drawBall(static_cast<int>(pos.x),static_cast<int>(pos.y),&rgb,width, true);
+        // drawBall(600,960,&rgb,width, false);
         rgb_to_yuv420p(rgb.data(), width, height, frame);
         frame->pts = i; 
 
@@ -180,6 +234,7 @@ int main() {
             }
             av_packet_unref(pkt);
         }
+        ending += jump_amt;
     }
 
     // Flush encoder
