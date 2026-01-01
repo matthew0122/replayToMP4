@@ -200,13 +200,12 @@ int main() {
             j = json::parse(str);
         }
         
-        updateVelocity(ball1, timeStep);
-        b2World_Step(worldId, timeStep, subStepCount);
+        
         b2Vec2 pos = b2Body_GetPosition(ball1.bodyId);
         
         if(i % (fps/4) == 0){ //1/4 second has passed, user server vals
-            std::cout << "X:" << pos.x << std::endl;
-            std::cout << "server Pos: " << positions[i/(fps/4)][0] <<std::endl;
+            // std::cout << "X:" << pos.x << std::endl;
+            // std::cout << "server Pos: " << positions[i/(fps/4)][0] <<std::endl;
             pos.x = positions[i/(fps/4)][0]*100;
             pos.y = positions[i/(fps/4)][1]*100;
             b2Transform t = b2Body_GetTransform(ball1.bodyId);
@@ -214,10 +213,12 @@ int main() {
 
             b2Vec2 velocity = {positions[i/(fps/4)][2]*100,positions[i/(fps/4)][3]*100};
 
-            b2Body_SetTransform(ball1.bodyId, pos, rot);
+            b2Body_SetTransform(ball1.bodyId, pos, t.q);
             b2Body_SetLinearVelocity(ball1.bodyId, velocity);
         }
         drawBall(static_cast<int>(pos.x),static_cast<int>(pos.y),&rgb,width, true);
+        updateVelocity(ball1, timeStep);
+        b2World_Step(worldId, timeStep, subStepCount);
         // drawBall(600,960,&rgb,width, false);
         rgb_to_yuv420p(rgb.data(), width, height, frame);
         frame->pts = i; 
