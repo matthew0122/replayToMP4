@@ -212,7 +212,10 @@ int main() {
             b2Transform t = b2Body_GetTransform(ball1.bodyId);
             b2Rot rot = b2MakeRot(b2Rot_GetAngle(t.q));
 
+            b2Vec2 velocity = {positions[i/(fps/4)][2]*100,positions[i/(fps/4)][3]*100};
+
             b2Body_SetTransform(ball1.bodyId, pos, rot);
+            b2Body_SetLinearVelocity(ball1.bodyId, velocity);
         }
         drawBall(static_cast<int>(pos.x),static_cast<int>(pos.y),&rgb,width, true);
         // drawBall(600,960,&rgb,width, false);
@@ -466,29 +469,29 @@ std::vector<std::vector<double>> parseReplay(std::string filename){
     json j;
     bool inElement = false;
     std::vector<std::vector<double>> positions;
+    double rx = 0;
+    double ry = 0;
+    double lx = 0;
+    double ly = 0;
     while(std::getline(file, str)){
         j = json::parse(str);
         if(j[1] == "p"){
             for(auto player : j[2]){
-                if (player["id"] == 1){
-                    if(player["rx"] != nullptr && player["ry"] != nullptr){
-                        std::vector<double> currentPos = {player["ry"], player["rx"]};
-                        positions.push_back(currentPos);
+                if (player["id"] == 1 && player["rx"] != nullptr){
+                    if (player["rx"] != nullptr){
+                        rx = player["rx"];
                     }
-                    else if(player["rx"] != nullptr){
-                        if(positions.size() == 0){
-                            continue;
-                        }
-                        std::vector<double> currentPos = {positions[positions.size()-1][0], player["rx"]};
-                        positions.push_back(currentPos);
+                    if (player["ry"] != nullptr){
+                        ry = player["ry"];
                     }
-                    else if(player["ry"] != nullptr){
-                        if(positions.size() == 0){
-                            continue;
-                        }
-                        std::vector<double> currentPos = {player["ry"], positions[positions.size()-1][0]};
-                        positions.push_back(currentPos);
+                    if (player["lx"] != nullptr){
+                        lx = player["lx"];
                     }
+                    if (player["ly"] != nullptr){
+                        ly = player["ly"];
+                    }
+                    std::vector<double> currentPos = {ry, rx, ly, lx};
+                    positions.push_back(currentPos);
                     
                 }
             }
